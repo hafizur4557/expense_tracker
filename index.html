@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monthly Expenditure</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--tx:#1b2330;--mu:#6b7686;--bd:#e1e6ee;--pr:#2f6fdb;--ok:#1f9d63;--bad:#d64545;--wk:#eef1f6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--card:#1a212c;--tx:#e8edf5;--mu:#93a0b3;--bd:#2a3342;--pr:#6aa0ff;--ok:#42c58a;--bad:#ff7a7a;--wk:#222b38;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--card:#1a212c;--tx:#e8edf5;--mu:#93a0b3;--bd:#2a3342;--pr:#6aa0ff;--ok:#42c58a;--bad:#ff7a7a;--wk:#222b38;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:560px;margin:0 auto;padding-bottom:40px}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding:12px 14px 6px}
+.nav{display:flex;align-items:center;justify-content:space-between}
+.nav button{width:42px;height:42px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:20px}
+.nav h1{font-size:18px;margin:0;text-align:center}
+.nav small{display:block;color:var(--mu);font-weight:400;font-size:13px}
+.tabs{display:flex;gap:6px;margin-top:10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:4px}
+.tabs button{flex:1;border:0;background:none;color:var(--mu);padding:9px;border-radius:9px;font-size:15px;font-weight:600}
+.tabs button.on{background:var(--pr);color:#fff}
+main{padding:6px 14px}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin:8px 0;width:100%;text-align:left;color:var(--tx);font:inherit}
+.row.wk{background:var(--wk)}
+.row.today{border-color:var(--pr);box-shadow:0 0 0 1px var(--pr)}
+.dn{width:38px;text-align:center}.dn b{display:block;font-size:20px;line-height:1}.dn span{font-size:11px;color:var(--mu);text-transform:uppercase}
+.mid{flex:1;min-width:0;color:var(--mu);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amt{font-weight:700}.amt.z{color:var(--mu);font-weight:500}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin:10px 0}
+.card h2{font-size:16px;margin:0 0 2px;display:flex;justify-content:space-between}
+.bar{height:8px;background:var(--wk);border-radius:6px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;background:var(--ok)}
+.bar.over i{background:var(--bad)}
+.it{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;border-top:1px solid var(--bd)}
+.it span:last-child{color:var(--mu)}
+.over-t{color:var(--bad)}
+.btn{display:block;width:100%;padding:13px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:15px;font-weight:600;margin:8px 0}
+.btn.p{background:var(--pr);color:#fff;border-color:var(--pr)}
+.btn.d{color:var(--bad)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:none;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.panel{background:var(--bg);width:100%;max-width:560px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px))}
+.panel h3{margin:0 0 4px;font-size:18px}
+.grp{font-size:13px;font-weight:700;color:var(--pr);text-transform:uppercase;margin:14px 0 4px}
+.f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+.f label{flex:1;font-size:15px}.f label small{color:var(--mu);display:block;font-size:12px}
+.f input{width:120px;padding:10px;font-size:16px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);text-align:right}
+.tot{display:flex;justify-content:space-between;font-weight:700;font-size:17px;margin:14px 0 6px}
+.warn{background:rgba(214,69,69,.12);border:1px solid var(--bad);color:var(--bad);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}.warn b{display:block;margin-bottom:4px}.f input.inbad{border-color:var(--bad);color:var(--bad)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:14px;display:none;z-index:30}
+</style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <button id="prev" aria-label="Previous month">‹</button>
+    <h1 id="mt"></h1>
+    <button id="next" aria-label="Next month">›</button>
+  </div>
+  <div class="tabs"><button id="t1" class="on">Daily</button><button id="t2">Summary</button></div>
+</header>
+<main id="main"></main>
+
+<div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const G=[
+ {id:'needs',name:'Needs',limit:40000,items:[['rent','House Rent',11000],['groc','Grocery',8000],['rech','Recharge',2000],['elec','Electricity',1500],['med','Medicine',3000],['lic','LIC',6000],['sch','School Fee',7000],['pet','Petrol / Travel',1500]]},
+ {id:'misc',name:'Misc (Bus fare / Online / Eating out / Others)',limit:10000,items:[['bus','Bus fare',0],['onl','Online purchase',0],['eat','Eating out',0],['oth','Others',0]]},
+ {id:'save',name:'Saving & Investments',limit:50000,items:[['sav','Savings Account',20000],['chit','Chit Fund',10000],['ppf','PPF',10000],['sip','SIP',10000]]}
+];
+const ALL=G.flatMap(g=>g.items.map(i=>({id:i[0],name:i[1],b:i[2],g:g.id})));
+const KEY='exp-tracker-v1';
+let data={};
+try{data=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){data={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast('Could not save on this device')}}
+const now=new Date();
+let Y=2026,M=11; // December 2026 by default
+if(now.getFullYear()===2026&&now.getMonth()===11){Y=2026;M=11}
+const fmt=n=>'₹'+(Math.round(n*100)/100).toLocaleString('en-IN');
+const pad=n=>String(n).padStart(2,'0');
+const dk=(d)=>Y+'-'+pad(M+1)+'-'+pad(d);
+const dim=()=>new Date(Y,M+1,0).getDate();
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let tab=1;
+function dayTotal(d){const r=data[dk(d)]||{};return ALL.reduce((s,i)=>s+(+r[i.id]||0),0)}
+function itemTotal(id){let s=0;for(let d=1;d<=dim();d++){s+=+((data[dk(d)]||{})[id])||0}return s}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',2200)}
+function warnings(){const w=[];G.forEach(g=>{const t=g.items.reduce((s,i)=>s+itemTotal(i[0]),0);if(t>g.limit)w.push(g.name.split(' (')[0]+' total '+fmt(t)+' is over the limit '+fmt(g.limit)+' by '+fmt(t-g.limit));g.items.forEach(i=>{const x=itemTotal(i[0]);if(i[2]&&x>i[2])w.push(i[1]+' '+fmt(x)+' is over the budget '+fmt(i[2])+' by '+fmt(x-i[2]))})});return w}
+function render(){
+  document.getElementById('mt').innerHTML=MN[M]+' '+Y+'<small>Total spent: '+fmt(ALL.reduce((s,i)=>s+itemTotal(i.id),0))+'</small>';
+  document.getElementById('t1').className=tab===1?'on':'';
+  document.getElementById('t2').className=tab===2?'on':'';
+  const m=document.getElementById('main');
+  const W=warnings();const wb=W.length?'<div class="warn"><b>⚠ Budget exceeded</b>'+W.map(t=>'<div>'+t+'</div>').join('')+'</div>':'';
+  if(tab===1){
+    let h='';
+    for(let d=1;d<=dim();d++){
+      const dt=new Date(Y,M,d),w=dt.getDay(),t=dayTotal(d);
+      const r=data[dk(d)]||{};
+      const parts=ALL.filter(i=>+r[i.id]>0).map(i=>i.name+' '+fmt(+r[i.id])).join(' · ');
+      const isT=dt.toDateString()===now.toDateString();
+      h+='<button class="row'+(w===0||w===6?' wk':'')+(isT?' today':'')+'" data-d="'+d+'" id="d'+d+'"><div class="dn"><b>'+d+'</b><span>'+WD[w]+'</span></div><div class="mid">'+(parts||'Tap to add expenses')+'</div><div class="amt'+(t?'':' z')+'">'+fmt(t)+'</div></button>';
+    }
+    m.innerHTML=wb+h;
+    m.querySelectorAll('.row').forEach(b=>b.onclick=()=>openDay(+b.dataset.d));
+    const td=document.getElementById('d'+now.getDate());
+    if(td&&now.getMonth()===M&&now.getFullYear()===Y&&!render.done){render.done=1;setTimeout(()=>td.scrollIntoView({block:'center'}),50)}
+  } else {
+    let h='',grand=0;
+    G.forEach(g=>{
+      const tot=g.items.reduce((s,i)=>s+itemTotal(i[0]),0);grand+=tot;
+      const pct=Math.min(100,tot/g.limit*100),over=tot>g.limit;
+      h+='<div class="card"><h2><span>'+g.name.split(' (')[0]+'</span><span class="'+(over?'over-t':'')+'">'+fmt(tot)+'</span></h2><div style="font-size:13px;color:var(--mu)">Limit '+fmt(g.limit)+' · '+(over?'over by '+fmt(tot-g.limit):'left '+fmt(g.limit-tot))+'</div><div class="bar'+(over?' over':'')+'"><i style="width:'+pct+'%"></i></div>';
+      g.items.forEach(i=>{const t=itemTotal(i[0]);h+='<div class="it"><span>'+i[1]+'</span><span class="'+(i[2]&&t>i[2]?'over-t':'')+'">'+fmt(t)+(i[2]?' / '+fmt(i[2]):'')+'</span></div>'});
+      h+='</div>';
+    });
+    h+='<div class="card"><h2><span>Grand total</span><span>'+fmt(grand)+'</span></h2></div>';
+    h+='<button class="btn p" id="cp">Copy month as table (paste in Excel)</button><button class="btn d" id="rs">Clear this month</button>';
+    m.innerHTML=wb+h;
+    document.getElementById('cp').onclick=copyTable;
+    document.getElementById('rs').onclick=()=>{if(confirm('Clear all entries for '+MN[M]+' '+Y+'?')){for(let d=1;d<=dim();d++)delete data[dk(d)];save();render()}};
+  }
+}
+function openDay(d){
+  const r=data[dk(d)]||{};
+  const dt=new Date(Y,M,d);
+  let h='<h3>'+d+' '+MN[M]+' '+Y+'</h3><div style="color:var(--mu);font-size:14px">'+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dt.getDay()]+'</div>';
+  G.forEach(g=>{
+    h+='<div class="grp">'+g.name.split(' (')[0]+'</div>';
+    g.items.forEach(i=>{h+='<div class="f"><label>'+i[1]+(i[2]?'<small>Monthly budget '+fmt(i[2])+'</small>':'')+'</label><input type="number" inputmode="decimal" min="0" data-id="'+i[0]+'" value="'+(r[i[0]]||'')+'" placeholder="0"></div>'});
+  });
+  h+='<div id="lw"></div><div class="tot"><span>Total for the day</span><span id="lt">₹0</span></div><button class="btn p" id="sv">Save</button><button class="btn" id="cl">Cancel</button>';
+  const p=document.getElementById('panel');p.innerHTML=h;
+  document.getElementById('sheet').classList.add('open');
+  const ins=[...p.querySelectorAll('input')];
+  const upd=()=>{document.getElementById('lt').textContent=fmt(ins.reduce((s,x)=>s+(+x.value||0),0));const w=[];G.forEach(g=>{let gt=0;g.items.forEach(i=>{const x=ins.find(e=>e.dataset.id===i[0]);const p=itemTotal(i[0])-(+r[i[0]]||0)+(+x.value||0);gt+=p;const bad=i[2]&&p>i[2];x.classList.toggle('inbad',!!bad);if(bad)w.push(i[1]+' will be '+fmt(p)+', over the budget '+fmt(i[2])+' by '+fmt(p-i[2]))});if(gt>g.limit)w.push(g.name.split(' (')[0]+' total will be '+fmt(gt)+', over the limit '+fmt(g.limit)+' by '+fmt(gt-g.limit))});document.getElementById('lw').innerHTML=w.length?'<div class="warn"><b>⚠ Budget exceeded</b>'+w.map(t=>'<div>'+t+'</div>').join('')+'</div>':''};
+  ins.forEach(x=>x.oninput=upd);upd();
+  document.getElementById('cl').onclick=close;
+  document.getElementById('sv').onclick=()=>{
+    const o={};ins.forEach(x=>{if(+x.value>0)o[x.dataset.id]=+x.value});
+    if(Object.keys(o).length)data[dk(d)]=o;else delete data[dk(d)];
+    save();close();render();toast(warnings().length?'Saved – ⚠ budget exceeded':'Saved')
+  };
+}
+function close(){document.getElementById('sheet').classList.remove('open')}
+document.getElementById('sheet').onclick=e=>{if(e.target.id==='sheet')close()};
+function copyTable(){
+  const rows=[['Sl. No.','Date','Day',...ALL.map(i=>i.name),'Total/Day']];
+  for(let d=1;d<=dim();d++){const r=data[dk(d)]||{};rows.push([d,d+'/'+(M+1)+'/'+Y,WD[new Date(Y,M,d).getDay()],...ALL.map(i=>r[i.id]||''),dayTotal(d)])}
+  rows.push(['','','Total',...ALL.map(i=>itemTotal(i.id)),ALL.reduce((s,i)=>s+itemTotal(i.id),0)]);
+  const txt=rows.map(r=>r.join('\t')).join('\n');
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Copied')}catch(e){toast('Copy not allowed here')}ta.remove()};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('Copied – paste in Excel'),fallback)}else fallback();
+}
+document.getElementById('prev').onclick=()=>{M--;if(M<0){M=11;Y--}render()};
+document.getElementById('next').onclick=()=>{M++;if(M>11){M=0;Y++}render()};
+document.getElementById('t1').onclick=()=>{tab=1;render()};
+document.getElementById('t2').onclick=()=>{tab=2;render()};
+render();
+</script>
+</body>
+</html>
